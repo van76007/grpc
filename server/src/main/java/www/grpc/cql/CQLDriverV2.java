@@ -1,0 +1,156 @@
+package www.grpc.cql;
+
+import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Row;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
+import www.grpc.concurrent.FutureUtils;
+import www.grpc.proto.Scyllaquery;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.*;
+
+import static java.util.stream.Collectors.toCollection;
+
+/**
+ * To execute this function
+ * session.getDriverSession().executeAsync(statement.bind("").setConsistencyLevel(session.getConsistencyLevel()))
+ */
+public class CQLDriverV2 {
+    private final CQLSession session;
+    private PreparedStatement statement;
+    private final String selectQuery = "select value from keyspace where key = ?";
+
+    private ExecutorService executorService = new ThreadPoolExecutor(
+            Runtime.getRuntime().availableProcessors(),
+            Runtime.getRuntime().availableProcessors(),
+            0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<Runnable>());
+
+    public CQLDriverV2(CQLSession session) {
+        this.session = session;
+        prepareStatement();
+    }
+
+    public void stop() {
+        this.session.close();
+        shutdownAndAwaitTermination(this.executorService);
+    }
+
+    /**
+     * Usage: Each request might be a new statement.
+     *        Chain futures: Create prepared statment -> execute it async
+     * @param query
+     * @return
+     */
+    public CompletableFuture<PreparedStatement> prepareStatementAsync(String query) {
+        return FutureUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query));
+    }
+
+    public CompletableFuture<Scyllaquery.Values> executeQueryOnExecutorThenConvert(String key) {
+        return executeQueryOnExecutor(key).thenApply(o ->
+                Scyllaquery.Values.newBuilder().addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new))).build());
+    }
+
+    protected CompletableFuture<Collection<Row>> executeQueryOnExecutor(String key) {
+        CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
+        executorService.submit(
+            () -> {
+                try {
+                    ResultSet rs = session.getDriverSession()
+                            .execute(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
+                    /*
+                    Collection<Row> alreadyFetched = new ArrayList<>();
+                    for (int i = 0; i < rs.getAvailableWithoutFetching(); i++) {
+                        alreadyFetched.add(rs.one());
+                    }
+                    result.complete(alreadyFetched);
+                     */
+                    Collection<Row> alreadyFetched = new ArrayList<>();
+                    for (Row r : rs) {
+                        alreadyFetched.add(r);
+                    }
+                    result.complete(alreadyFetched);
+                } catch(Throwable t) {
+                    result.completeExceptionally(t);
+                }
+            });
+        return result;
+    }
+
+    public CompletableFuture<Collection<Row>> executeQuery(String key) {
+        CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
+        ResultSetFuture future = session.getDriverSession()
+                .executeAsync(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
+        // TODO: Custom executor?
+        Futures.addCallback(future, new FutureCallback<ResultSet>() {
+            @Override
+            public void onSuccess(ResultSet rs) {
+                fetchRowsAsync(rs, new ArrayList<>(), result);
+            }
+            @Override
+            public void onFailure(Throwable t) {
+                result.completeExceptionally(t);
+            }
+        }, MoreExecutors.directExecutor());
+        return result;
+    }
+
+    private void fetchRowsAsync(ResultSet rs, Collection<Row> alreadyFetched,
+                                CompletableFuture<Collection<Row>> result) {
+        int availableWithoutFetching = rs.getAvailableWithoutFetching();
+        if (availableWithoutFetching == 0) {
+            if (rs.isFullyFetched()) {
+                result.complete(alreadyFetched);
+            } else {
+                // TODO: Custom executor?
+                Futures.addCallback(rs.fetchMoreResults(), new FutureCallback<ResultSet>() {
+                    @Override
+                    public void onSuccess(ResultSet rsNew) {
+                        fetchRowsAsync(rsNew, alreadyFetched, result);
+                    }
+                    @Override
+                    public void onFailure(Throwable t) {
+                        result.completeExceptionally(t);
+                    }
+                }, MoreExecutors.directExecutor());
+            }
+        } else {
+            for (int i = 0; i < availableWithoutFetching; i++) {
+                alreadyFetched.add(rs.one());
+            }
+            fetchRowsAsync(rs, alreadyFetched, result);
+        }
+    }
+
+    /**
+     * Usage: The entire session runs only 1 statement
+     */
+    private void prepareStatement() {
+        this.statement = session.getDriverSession().prepare(selectQuery);
+    }
+
+    private void shutdownAndAwaitTermination(ExecutorService pool) {
+        // Disable new tasks from being submitted
+        pool.shutdown();
+        try {
+            // Wait a while for existing tasks to terminate
+            if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
+                // Cancel currently executing tasks forcefully
+                pool.shutdownNow();
+                // Wait a while for tasks to respond to being cancelled
+                if (!pool.awaitTermination(60, TimeUnit.SECONDS))
+                    System.err.println("Pool did not terminate");
+            }
+        } catch (InterruptedException ex) {
+            // (Re-)Cancel if current thread also interrupted
+            pool.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+    }
+}
