@@ -95,8 +95,8 @@ INSERT INTO history (
     value
 ) VALUES (
     toTimeStamp(now()),
-    'key1',
-    'val11'
+    '0',
+    '10'
 );
 
 INSERT INTO history (
@@ -105,8 +105,8 @@ INSERT INTO history (
     value
 ) VALUES (
     toTimeStamp(now()),
-    'key1',
-    'val12'
+    '0',
+    '20'
 );
 
 INSERT INTO history (
@@ -115,8 +115,8 @@ INSERT INTO history (
     value
 ) VALUES (
     toTimeStamp(now()),
-    'key2',
-    'val21'
+    '1',
+    '11'
 );
 
 INSERT INTO history (
@@ -125,8 +125,28 @@ INSERT INTO history (
     value
 ) VALUES (
     toTimeStamp(now()),
-    'key2',
-    'val22'
+    '1',
+    '21'
+);
+
+INSERT INTO history (
+    occasion,
+    key,
+    value
+) VALUES (
+    toTimeStamp(now()),
+    '2',
+    '32'
+);
+
+INSERT INTO history (
+    occasion,
+    key,
+    value
+) VALUES (
+    toTimeStamp(now()),
+    '2',
+    '12'
 );
 
 SELECT * FROM history;

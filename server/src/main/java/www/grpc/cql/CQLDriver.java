@@ -6,6 +6,7 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 import www.grpc.concurrent.ConcurrencyUtils;
 import www.grpc.proto.Scyllaquery;
 import www.grpc.proto.Scyllaquery.Request;
@@ -27,12 +28,14 @@ public class CQLDriver {
 
     private ExecutorService executorService = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
-            Runtime.getRuntime().availableProcessors(),
+            Runtime.getRuntime().availableProcessors() * 2,
             0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<Runnable>());
 
-    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    // private Executor executor = MoreExecutors.directExecutor();
+    /*
+    private ThreadPoolExecutor executor =
+            (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
+    */
 
     public CQLDriver(CQLSession session) {
         this.session = session;
@@ -43,7 +46,6 @@ public class CQLDriver {
     public void stop() {
         session.close();
         ConcurrencyUtils.shutdownAndAwaitTermination(executorService);
-        ConcurrencyUtils.shutdownAndAwaitTermination(executor);
     }
 
     /**
@@ -60,10 +62,12 @@ public class CQLDriver {
      * @return
      */
     private CompletableFuture<PreparedStatement> prepareStatementAsync(String query) {
-        return ConcurrencyUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query), executor);
+        return ConcurrencyUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query), executorService);
     }
 
-    public CompletableFuture<Response> executeQueryOnExecutorThenConvert(Request request) {
+    // This is not good version
+    /*
+    public CompletableFuture<Response> queryThenConvert(Request request) {
         return executeQueryOnExecutor(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
                         .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
@@ -72,7 +76,22 @@ public class CQLDriver {
 
         );
     }
+     */
+    public CompletableFuture<Response> queryThenConvert(Request request) {
+        return executeQuery(request.getKey()).thenApply(o ->
+                Scyllaquery.Response.newBuilder()
+                        .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
+                        .setStart(request.getStart())
+                        .build()
 
+        );
+    }
+
+    /**
+     * This is not a good version as it is blocked on CQL session.execute
+     * @param key
+     * @return
+     */
     protected CompletableFuture<Collection<Row>> executeQueryOnExecutor(String key) {
         CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
         executorService.submit(
@@ -80,20 +99,6 @@ public class CQLDriver {
                 try {
                     ResultSet rs = session.getDriverSession()
                             .execute(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
-                    /*
-                    Collection<Row> alreadyFetched = new ArrayList<>();
-                    for (int i = 0; i < rs.getAvailableWithoutFetching(); i++) {
-                        alreadyFetched.add(rs.one());
-                    }
-                    result.complete(alreadyFetched);
-                     */
-                    /*
-                    Collection<Row> alreadyFetched = new ArrayList<>();
-                    for (Row r : rs) {
-                        alreadyFetched.add(r);
-                    }
-                    result.complete(alreadyFetched);
-                     */
                     fetchRowsAsync(rs, new ArrayList<>(), result);
                 } catch(Throwable t) {
                     result.completeExceptionally(t);
@@ -106,7 +111,6 @@ public class CQLDriver {
         CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
         ResultSetFuture future = session.getDriverSession()
                 .executeAsync(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
-        // TODO: MoreExecutors.directExecutor() or executor or custom thread pool
         Futures.addCallback(future, new FutureCallback<ResultSet>() {
             @Override
             public void onSuccess(ResultSet rs) {
@@ -116,7 +120,7 @@ public class CQLDriver {
             public void onFailure(Throwable t) {
                 result.completeExceptionally(t);
             }
-        }, executor);
+        }, executorService); // MoreExecutors.directExecutor() or executor?
         return result;
     }
 
@@ -136,7 +140,7 @@ public class CQLDriver {
                     public void onFailure(Throwable t) {
                         result.completeExceptionally(t);
                     }
-                }, executor);
+                }, executorService);
             }
         } else {
             for (int i = 0; i < availableWithoutFetching; i++) {

@@ -14,29 +14,29 @@ public final class QueryScyllaGrpc {
   public static final String SERVICE_NAME = "scyllaquery.QueryScylla";
 
   // Static method descriptors that strictly reflect the proto.
-  private static volatile io.grpc.MethodDescriptor<www.grpc.proto.Scyllaquery.SearchKey,
-      www.grpc.proto.Scyllaquery.Values> getExecuteQueryMethod;
+  private static volatile io.grpc.MethodDescriptor<www.grpc.proto.Scyllaquery.Request,
+      www.grpc.proto.Scyllaquery.Response> getExecuteQueryMethod;
 
   @io.grpc.stub.annotations.RpcMethod(
       fullMethodName = SERVICE_NAME + '/' + "ExecuteQuery",
-      requestType = www.grpc.proto.Scyllaquery.SearchKey.class,
-      responseType = www.grpc.proto.Scyllaquery.Values.class,
+      requestType = www.grpc.proto.Scyllaquery.Request.class,
+      responseType = www.grpc.proto.Scyllaquery.Response.class,
       methodType = io.grpc.MethodDescriptor.MethodType.UNARY)
-  public static io.grpc.MethodDescriptor<www.grpc.proto.Scyllaquery.SearchKey,
-      www.grpc.proto.Scyllaquery.Values> getExecuteQueryMethod() {
-    io.grpc.MethodDescriptor<www.grpc.proto.Scyllaquery.SearchKey, www.grpc.proto.Scyllaquery.Values> getExecuteQueryMethod;
+  public static io.grpc.MethodDescriptor<www.grpc.proto.Scyllaquery.Request,
+      www.grpc.proto.Scyllaquery.Response> getExecuteQueryMethod() {
+    io.grpc.MethodDescriptor<www.grpc.proto.Scyllaquery.Request, www.grpc.proto.Scyllaquery.Response> getExecuteQueryMethod;
     if ((getExecuteQueryMethod = QueryScyllaGrpc.getExecuteQueryMethod) == null) {
       synchronized (QueryScyllaGrpc.class) {
         if ((getExecuteQueryMethod = QueryScyllaGrpc.getExecuteQueryMethod) == null) {
           QueryScyllaGrpc.getExecuteQueryMethod = getExecuteQueryMethod =
-              io.grpc.MethodDescriptor.<www.grpc.proto.Scyllaquery.SearchKey, www.grpc.proto.Scyllaquery.Values>newBuilder()
+              io.grpc.MethodDescriptor.<www.grpc.proto.Scyllaquery.Request, www.grpc.proto.Scyllaquery.Response>newBuilder()
               .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
               .setFullMethodName(generateFullMethodName(SERVICE_NAME, "ExecuteQuery"))
               .setSampledToLocalTracing(true)
               .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  www.grpc.proto.Scyllaquery.SearchKey.getDefaultInstance()))
+                  www.grpc.proto.Scyllaquery.Request.getDefaultInstance()))
               .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
-                  www.grpc.proto.Scyllaquery.Values.getDefaultInstance()))
+                  www.grpc.proto.Scyllaquery.Response.getDefaultInstance()))
               .setSchemaDescriptor(new QueryScyllaMethodDescriptorSupplier("ExecuteQuery"))
               .build();
         }
@@ -95,8 +95,8 @@ public final class QueryScyllaGrpc {
 
     /**
      */
-    public void executeQuery(www.grpc.proto.Scyllaquery.SearchKey request,
-        io.grpc.stub.StreamObserver<www.grpc.proto.Scyllaquery.Values> responseObserver) {
+    public void executeQuery(www.grpc.proto.Scyllaquery.Request request,
+        io.grpc.stub.StreamObserver<www.grpc.proto.Scyllaquery.Response> responseObserver) {
       io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getExecuteQueryMethod(), responseObserver);
     }
 
@@ -106,8 +106,8 @@ public final class QueryScyllaGrpc {
             getExecuteQueryMethod(),
             io.grpc.stub.ServerCalls.asyncUnaryCall(
               new MethodHandlers<
-                www.grpc.proto.Scyllaquery.SearchKey,
-                www.grpc.proto.Scyllaquery.Values>(
+                www.grpc.proto.Scyllaquery.Request,
+                www.grpc.proto.Scyllaquery.Response>(
                   this, METHODID_EXECUTE_QUERY)))
           .build();
     }
@@ -129,8 +129,8 @@ public final class QueryScyllaGrpc {
 
     /**
      */
-    public void executeQuery(www.grpc.proto.Scyllaquery.SearchKey request,
-        io.grpc.stub.StreamObserver<www.grpc.proto.Scyllaquery.Values> responseObserver) {
+    public void executeQuery(www.grpc.proto.Scyllaquery.Request request,
+        io.grpc.stub.StreamObserver<www.grpc.proto.Scyllaquery.Response> responseObserver) {
       io.grpc.stub.ClientCalls.asyncUnaryCall(
           getChannel().newCall(getExecuteQueryMethod(), getCallOptions()), request, responseObserver);
     }
@@ -152,7 +152,7 @@ public final class QueryScyllaGrpc {
 
     /**
      */
-    public www.grpc.proto.Scyllaquery.Values executeQuery(www.grpc.proto.Scyllaquery.SearchKey request) {
+    public www.grpc.proto.Scyllaquery.Response executeQuery(www.grpc.proto.Scyllaquery.Request request) {
       return io.grpc.stub.ClientCalls.blockingUnaryCall(
           getChannel(), getExecuteQueryMethod(), getCallOptions(), request);
     }
@@ -174,8 +174,8 @@ public final class QueryScyllaGrpc {
 
     /**
      */
-    public com.google.common.util.concurrent.ListenableFuture<www.grpc.proto.Scyllaquery.Values> executeQuery(
-        www.grpc.proto.Scyllaquery.SearchKey request) {
+    public com.google.common.util.concurrent.ListenableFuture<www.grpc.proto.Scyllaquery.Response> executeQuery(
+        www.grpc.proto.Scyllaquery.Request request) {
       return io.grpc.stub.ClientCalls.futureUnaryCall(
           getChannel().newCall(getExecuteQueryMethod(), getCallOptions()), request);
     }
@@ -201,8 +201,8 @@ public final class QueryScyllaGrpc {
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
         case METHODID_EXECUTE_QUERY:
-          serviceImpl.executeQuery((www.grpc.proto.Scyllaquery.SearchKey) request,
-              (io.grpc.stub.StreamObserver<www.grpc.proto.Scyllaquery.Values>) responseObserver);
+          serviceImpl.executeQuery((www.grpc.proto.Scyllaquery.Request) request,
+              (io.grpc.stub.StreamObserver<www.grpc.proto.Scyllaquery.Response>) responseObserver);
           break;
         default:
           throw new AssertionError();

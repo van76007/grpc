@@ -18,7 +18,7 @@ public class RequestHandler {
     }
 
     public void hanle(Request request) {
-        driver.executeQueryOnExecutorThenConvert(request).whenComplete(
+        driver.queryThenConvert(request).whenComplete(
             (response, error) -> {
                 if (error != null) {
                     exceptionHandler.handleException(error);
