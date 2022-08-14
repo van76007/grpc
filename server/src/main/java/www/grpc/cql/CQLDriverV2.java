@@ -7,7 +7,7 @@ import com.datastax.driver.core.Row;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.MoreExecutors;
-import www.grpc.concurrent.FutureUtils;
+import www.grpc.concurrent.ConcurrencyUtils;
 import www.grpc.proto.Scyllaquery;
 
 import java.util.ArrayList;
@@ -31,14 +31,25 @@ public class CQLDriverV2 {
             0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<Runnable>());
 
+    private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    // private Executor executor = MoreExecutors.directExecutor();
+
     public CQLDriverV2(CQLSession session) {
         this.session = session;
         prepareStatement();
     }
 
     public void stop() {
-        this.session.close();
-        shutdownAndAwaitTermination(this.executorService);
+        session.close();
+        ConcurrencyUtils.shutdownAndAwaitTermination(executorService);
+        ConcurrencyUtils.shutdownAndAwaitTermination(executor);
+    }
+
+    /**
+     * Usage: The entire session runs only 1 statement
+     */
+    private void prepareStatement() {
+        this.statement = session.getDriverSession().prepare(selectQuery);
     }
 
     /**
@@ -47,8 +58,8 @@ public class CQLDriverV2 {
      * @param query
      * @return
      */
-    public CompletableFuture<PreparedStatement> prepareStatementAsync(String query) {
-        return FutureUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query));
+    private CompletableFuture<PreparedStatement> prepareStatementAsync(String query) {
+        return ConcurrencyUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query), executor);
     }
 
     public CompletableFuture<Scyllaquery.Values> executeQueryOnExecutorThenConvert(String key) {
@@ -70,11 +81,14 @@ public class CQLDriverV2 {
                     }
                     result.complete(alreadyFetched);
                      */
+                    /*
                     Collection<Row> alreadyFetched = new ArrayList<>();
                     for (Row r : rs) {
                         alreadyFetched.add(r);
                     }
                     result.complete(alreadyFetched);
+                     */
+                    fetchRowsAsync(rs, new ArrayList<>(), result);
                 } catch(Throwable t) {
                     result.completeExceptionally(t);
                 }
@@ -86,7 +100,7 @@ public class CQLDriverV2 {
         CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
         ResultSetFuture future = session.getDriverSession()
                 .executeAsync(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
-        // TODO: Custom executor?
+        // TODO: MoreExecutors.directExecutor() or executor or custom thread pool
         Futures.addCallback(future, new FutureCallback<ResultSet>() {
             @Override
             public void onSuccess(ResultSet rs) {
@@ -96,7 +110,7 @@ public class CQLDriverV2 {
             public void onFailure(Throwable t) {
                 result.completeExceptionally(t);
             }
-        }, MoreExecutors.directExecutor());
+        }, executor);
         return result;
     }
 
@@ -107,7 +121,6 @@ public class CQLDriverV2 {
             if (rs.isFullyFetched()) {
                 result.complete(alreadyFetched);
             } else {
-                // TODO: Custom executor?
                 Futures.addCallback(rs.fetchMoreResults(), new FutureCallback<ResultSet>() {
                     @Override
                     public void onSuccess(ResultSet rsNew) {
@@ -117,40 +130,13 @@ public class CQLDriverV2 {
                     public void onFailure(Throwable t) {
                         result.completeExceptionally(t);
                     }
-                }, MoreExecutors.directExecutor());
+                }, executor);
             }
         } else {
             for (int i = 0; i < availableWithoutFetching; i++) {
                 alreadyFetched.add(rs.one());
             }
             fetchRowsAsync(rs, alreadyFetched, result);
-        }
-    }
-
-    /**
-     * Usage: The entire session runs only 1 statement
-     */
-    private void prepareStatement() {
-        this.statement = session.getDriverSession().prepare(selectQuery);
-    }
-
-    private void shutdownAndAwaitTermination(ExecutorService pool) {
-        // Disable new tasks from being submitted
-        pool.shutdown();
-        try {
-            // Wait a while for existing tasks to terminate
-            if (!pool.awaitTermination(60, TimeUnit.SECONDS)) {
-                // Cancel currently executing tasks forcefully
-                pool.shutdownNow();
-                // Wait a while for tasks to respond to being cancelled
-                if (!pool.awaitTermination(60, TimeUnit.SECONDS))
-                    System.err.println("Pool did not terminate");
-            }
-        } catch (InterruptedException ex) {
-            // (Re-)Cancel if current thread also interrupted
-            pool.shutdownNow();
-            // Preserve interrupt status
-            Thread.currentThread().interrupt();
         }
     }
 }
