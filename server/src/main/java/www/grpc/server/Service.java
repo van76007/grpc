@@ -1,16 +1,16 @@
 package www.grpc.server;
 
 import www.grpc.concurrent.SynchronizedStreamObserver;
-import www.grpc.cql.CQLDriverV2;
+import www.grpc.cql.CQLDriver;
 import www.grpc.proto.QueryScyllaGrpc;
 import www.grpc.proto.Scyllaquery.SearchKey;
 import www.grpc.proto.Scyllaquery.Values;
 import io.grpc.stub.StreamObserver;
 
 public class Service extends QueryScyllaGrpc.QueryScyllaImplBase {
-    private final CQLDriverV2 driver;
+    private final CQLDriver driver;
 
-    public Service(CQLDriverV2 driver) {
+    public Service(CQLDriver driver) {
         this.driver = driver;
     }
 

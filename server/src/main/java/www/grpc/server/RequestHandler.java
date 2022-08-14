@@ -1,20 +1,17 @@
 package www.grpc.server;
 
-import com.datastax.driver.core.Row;
 import io.grpc.stub.StreamObserver;
-import www.grpc.cql.CQLDriverV2;
+import www.grpc.cql.CQLDriver;
 import www.grpc.proto.Scyllaquery;
 import www.grpc.proto.Scyllaquery.SearchKey;
 import www.grpc.proto.Scyllaquery.Values;
 
-import java.util.Collection;
-
 public class RequestHandler {
     private final StreamObserver<Scyllaquery.Values> responseObserver;
     private final ExceptionHandler exceptionHandler;
-    private final CQLDriverV2 driver;
+    private final CQLDriver driver;
 
-    public RequestHandler(StreamObserver<Values> responseObserver, ExceptionHandler exceptionHandler, CQLDriverV2 driver) {
+    public RequestHandler(StreamObserver<Values> responseObserver, ExceptionHandler exceptionHandler, CQLDriver driver) {
         this.responseObserver = responseObserver;
         this.exceptionHandler = exceptionHandler;
         this.driver = driver;

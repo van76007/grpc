@@ -1,15 +1,22 @@
-1. Set Java version
-```aidl
+1. Start Scylla cluser 3 nodes
+```
+cd docker
+./setupScyllaCluster.sh
+```
+
+2. Set Java version
+```
 jenv shell 1.8
 ```
-2. Compile
+
+3. Compile Server by Maven. Can use Java 11
 ```
 jenv shell 11
 cd server
 mvn clean install
 ```
 
-2. Gradle. Only work with Java 1.8 for now
+4. Compile and start Server by Gradle. Only work with Java 1.8 for now
 ```
 jenv shell 1.8
 cd server

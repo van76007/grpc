@@ -1,11 +1,13 @@
 package www.grpc.server;
 import io.grpc.netty.NettyServerBuilder;
 import www.grpc.cql.CQLConfiguration;
-import www.grpc.cql.CQLDriverV2;
+import www.grpc.cql.CQLDriver;
 import www.grpc.cql.CQLSession;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetSocketAddress;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -54,12 +56,17 @@ public class Server {
         }
     }
 
-    private CQLDriverV2 buildDriver() {
+    private CQLDriver buildDriver() {
         CQLConfiguration config = CQLConfiguration.builder()
-                .addContactPoint("localhost", 9042)
+                .addContactPoints(Arrays.asList(
+                        new InetSocketAddress("localhost", 9042),
+                        new InetSocketAddress("localhost", 9043),
+                        new InetSocketAddress("localhost", 9044))
+                )
+                .withCredentials("cassandra", "cassandra")
                 .build();
         CQLSession session = new CQLSession(config);
-        return new CQLDriverV2(session);
+        return new CQLDriver(session);
     }
 
     private Service buildService() {

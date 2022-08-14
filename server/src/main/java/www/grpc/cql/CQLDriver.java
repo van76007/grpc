@@ -6,7 +6,6 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.MoreExecutors;
 import www.grpc.concurrent.ConcurrencyUtils;
 import www.grpc.proto.Scyllaquery;
 
@@ -20,10 +19,10 @@ import static java.util.stream.Collectors.toCollection;
  * To execute this function
  * session.getDriverSession().executeAsync(statement.bind("").setConsistencyLevel(session.getConsistencyLevel()))
  */
-public class CQLDriverV2 {
+public class CQLDriver {
     private final CQLSession session;
     private PreparedStatement statement;
-    private final String selectQuery = "select value from demo.kv where key = ?";
+    private final String selectQuery = "select value from demo.history where key = ?";
 
     private ExecutorService executorService = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
@@ -34,9 +33,10 @@ public class CQLDriverV2 {
     private ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     // private Executor executor = MoreExecutors.directExecutor();
 
-    public CQLDriverV2(CQLSession session) {
+    public CQLDriver(CQLSession session) {
         this.session = session;
         prepareStatement();
+        System.out.println("Done prepare statement");
     }
 
     public void stop() {
