@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toCollection;
 public class CQLDriverV2 {
     private final CQLSession session;
     private PreparedStatement statement;
-    private final String selectQuery = "select value from keyspace where key = ?";
+    private final String selectQuery = "select value from demo.kv where key = ?";
 
     private ExecutorService executorService = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
