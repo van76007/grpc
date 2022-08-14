@@ -1,5 +1,6 @@
 package www.grpc.server;
 import io.grpc.netty.NettyServerBuilder;
+import io.grpc.protobuf.services.ProtoReflectionService;
 import www.grpc.cql.CQLConfiguration;
 import www.grpc.cql.CQLDriver;
 import www.grpc.cql.CQLSession;
@@ -31,7 +32,9 @@ public class Server {
                         .addService(new Service(persistence, executor))
                         .build();
                         */
-        server = configureNettyServerBuilder().addService(buildService()).build();
+        server = configureNettyServerBuilder()
+                .addService(ProtoReflectionService.newInstance())
+                .addService(buildService()).build();
     }
 
     public void start() {
@@ -46,8 +49,6 @@ public class Server {
         try {
             server.shutdown();
             long timeoutMillis = TimeUnit.SECONDS.toMillis(SHUTDOWN_TIMEOUT_SECONDS);
-            long start = System.currentTimeMillis();
-
             if (!server.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
                 System.out.println("Timed out while waiting for executor shutdown");
             }

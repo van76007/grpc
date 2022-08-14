@@ -8,7 +8,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import www.grpc.concurrent.ConcurrencyUtils;
 import www.grpc.proto.Scyllaquery;
-
+import www.grpc.proto.Scyllaquery.Request;
+import www.grpc.proto.Scyllaquery.Response;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.*;
@@ -62,9 +63,14 @@ public class CQLDriver {
         return ConcurrencyUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query), executor);
     }
 
-    public CompletableFuture<Scyllaquery.Values> executeQueryOnExecutorThenConvert(String key) {
-        return executeQueryOnExecutor(key).thenApply(o ->
-                Scyllaquery.Values.newBuilder().addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new))).build());
+    public CompletableFuture<Response> executeQueryOnExecutorThenConvert(Request request) {
+        return executeQueryOnExecutor(request.getKey()).thenApply(o ->
+                Scyllaquery.Response.newBuilder()
+                        .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
+                        .setStart(request.getStart())
+                        .build()
+
+        );
     }
 
     protected CompletableFuture<Collection<Row>> executeQueryOnExecutor(String key) {

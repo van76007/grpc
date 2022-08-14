@@ -8,11 +8,12 @@ import io.grpc.stub.StreamObserver;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.concurrent.CompletionException;
+import www.grpc.proto.Scyllaquery.Response;
 
 public class ExceptionHandler {
-  private final StreamObserver<www.grpc.proto.Scyllaquery.Values> responseObserver;
+  private final StreamObserver<Response> responseObserver;
 
-  public ExceptionHandler(StreamObserver<www.grpc.proto.Scyllaquery.Values> responseObserver) {
+  public ExceptionHandler(StreamObserver<Response> responseObserver) {
     this.responseObserver = responseObserver;
   }
 

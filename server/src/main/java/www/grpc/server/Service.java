@@ -3,8 +3,8 @@ package www.grpc.server;
 import www.grpc.concurrent.SynchronizedStreamObserver;
 import www.grpc.cql.CQLDriver;
 import www.grpc.proto.QueryScyllaGrpc;
-import www.grpc.proto.Scyllaquery.SearchKey;
-import www.grpc.proto.Scyllaquery.Values;
+import www.grpc.proto.Scyllaquery.Request;
+import www.grpc.proto.Scyllaquery.Response;
 import io.grpc.stub.StreamObserver;
 
 public class Service extends QueryScyllaGrpc.QueryScyllaImplBase {
@@ -15,9 +15,9 @@ public class Service extends QueryScyllaGrpc.QueryScyllaImplBase {
     }
 
     @Override
-    public void executeQuery(SearchKey request, StreamObserver<Values> responseObserver) {
+    public void executeQuery(Request request, StreamObserver<Response> responseObserver) {
         // io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getExecuteQueryMethod(), responseObserver);
-        SynchronizedStreamObserver<Values> synchronizedStreamObserver = new SynchronizedStreamObserver<>(responseObserver);
+        SynchronizedStreamObserver<Response> synchronizedStreamObserver = new SynchronizedStreamObserver<>(responseObserver);
         ExceptionHandler exceptionHandler = new ExceptionHandler(synchronizedStreamObserver);
         new RequestHandler(synchronizedStreamObserver, exceptionHandler, driver).hanle(request);
     }

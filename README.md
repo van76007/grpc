@@ -22,3 +22,8 @@ jenv shell 1.8
 cd server
 ./gradlew runServer
 ```
+
+5. Test Server by command-line. Note that we have to enable service ProtoReflectionService
+```
+grpcurl --plaintext -d '{"key":"key1", "start":11}' localhost:8090 scyllaquery.QueryScylla/ExecuteQuery
+```
