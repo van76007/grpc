@@ -28,7 +28,7 @@ public class CQLDriver {
 
     private ExecutorService executorService = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
-            Runtime.getRuntime().availableProcessors() * 2,
+            Runtime.getRuntime().availableProcessors() * 8,
             0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<Runnable>());
 

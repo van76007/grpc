@@ -4,6 +4,7 @@ import io.grpc.protobuf.services.ProtoReflectionService;
 import www.grpc.cql.CQLConfiguration;
 import www.grpc.cql.CQLDriver;
 import www.grpc.cql.CQLSession;
+import www.grpc.cql.ConsistencyLevel;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -65,6 +66,7 @@ public class Server {
                         new InetSocketAddress("localhost", 9044))
                 )
                 .withCredentials("cassandra", "cassandra")
+                .withConsistencyLevel(ConsistencyLevel.LOCAL_ONE)
                 .build();
         CQLSession session = new CQLSession(config);
         return new CQLDriver(session);
@@ -86,7 +88,7 @@ public class Server {
         // In principle, the number of threads should be equal to the number of CPUs
         i_threads = i_threads * 4;
 
-        String value = System.getenv().getOrDefault("JVM_EXECUTOR_TYPE", "single");
+        String value = System.getenv().getOrDefault("JVM_EXECUTOR_TYPE", "workStealing");
         System.out.println("Number of threads " + i_threads + " and executor style=" + value);
 
         if (Objects.equals(value, "direct")) {

@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ClientRunner {
-    private static final long DURATION_SECONDS = 60;
+    private static final long DURATION_SECONDS = 100;
 
     /**
      * NUM_CONCURRENCY = 1 -> Did 441.73333333333335 RPCs/s but most of the time delay is 1/2 ms

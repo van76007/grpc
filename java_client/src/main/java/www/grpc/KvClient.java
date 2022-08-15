@@ -60,6 +60,7 @@ public class KvClient {
 
                 @Override
                 public void onFailure(Throwable t) {
+                    t.printStackTrace();
                     Status status = Status.fromThrowable(t);
                     System.out.println("On Failure " + status.getCode());
                 }
