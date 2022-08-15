@@ -86,9 +86,9 @@ public class Server {
         }
 
         // In principle, the number of threads should be equal to the number of CPUs
-        i_threads = i_threads * 8;
+        i_threads = i_threads;
 
-        String value = System.getenv().getOrDefault("JVM_EXECUTOR_TYPE", "workStealing");
+        String value = System.getenv().getOrDefault("JVM_EXECUTOR_TYPE", "fixed");
         System.out.println("Number of threads " + i_threads + " and executor style=" + value);
 
         if (Objects.equals(value, "direct")) {
