@@ -47,7 +47,7 @@ public class ClientRunner {
             client.doClientWork(done);
             long requestCount = client.getRpcCount();
             double qps = (double) requestCount / DURATION_SECONDS;
-            System.out.println("Did " + qps + " RPCs/s");
+            System.out.println("Completed " + qps + " RPCs/s");
 
         } finally {
             scheduler.shutdownNow();
