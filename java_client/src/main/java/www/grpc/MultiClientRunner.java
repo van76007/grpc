@@ -31,7 +31,7 @@ class MyThread implements Runnable
     @Override
     public void run()
     {
-        final int NUM_CONCURRENCY = 100;
+        final int NUM_CONCURRENCY = 128;
 
         // Use e.g. "dns:///192.168.1.35:8090" if server running on another machine
         final String GRPC_SERVER = "dns:///localhost:8090";
@@ -46,7 +46,7 @@ class MyThread implements Runnable
         ManagedChannel channel = ManagedChannelBuilder.forTarget(GRPC_SERVER).usePlaintext().build();
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-        long DURATION_SECONDS = 120;
+        long DURATION_SECONDS = 100;
         try {
             AtomicBoolean done = new AtomicBoolean();
             KvClient client = new KvClient(channel, NUM_CONCURRENCY);

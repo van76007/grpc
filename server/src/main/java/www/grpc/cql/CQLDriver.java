@@ -26,16 +26,20 @@ public class CQLDriver {
     private PreparedStatement statement;
     private final String selectQuery = "select value from demo.history where key = ?";
 
+    /*
     private ExecutorService executorService = new ThreadPoolExecutor(
-            Runtime.getRuntime().availableProcessors(),
-            Runtime.getRuntime().availableProcessors(),
+            Runtime.getRuntime().availableProcessors() * 2,
+            Runtime.getRuntime().availableProcessors() * 2,
             0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<Runnable>());
+    */
 
     /*
     private ThreadPoolExecutor executor =
             (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
     */
+
+    private ExecutorService executorService = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors()*8);
 
     public CQLDriver(CQLSession session) {
         this.session = session;

@@ -6,7 +6,7 @@ public class CustomThreadPool {
     //Thread pool size
     private final int poolSize;
 
-    //Internally pool is an array
+    // Internal pool is an array
     private final WorkerThread[] workers;
 
     // FIFO ordering
