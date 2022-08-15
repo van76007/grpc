@@ -28,7 +28,7 @@ public class CQLDriver {
 
     private ExecutorService executorService = new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors(),
-            Runtime.getRuntime().availableProcessors() * 8,
+            Runtime.getRuntime().availableProcessors(),
             0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<Runnable>());
 
@@ -65,10 +65,9 @@ public class CQLDriver {
         return ConcurrencyUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query), executorService);
     }
 
-    // This is not good version
-    /*
-    public CompletableFuture<Response> queryThenConvert(Request request) {
-        return executeQueryOnExecutor(request.getKey()).thenApply(o ->
+    // This is not good version if calling executeQueryOnExecutorV1
+    public CompletableFuture<Response> queryThenConvertV2(Request request) {
+        return executeQueryOnExecutorV2(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
                         .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
                         .setStart(request.getStart())
@@ -76,7 +75,7 @@ public class CQLDriver {
 
         );
     }
-     */
+
     public CompletableFuture<Response> queryThenConvert(Request request) {
         return executeQuery(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
@@ -92,7 +91,7 @@ public class CQLDriver {
      * @param key
      * @return
      */
-    protected CompletableFuture<Collection<Row>> executeQueryOnExecutor(String key) {
+    protected CompletableFuture<Collection<Row>> executeQueryOnExecutorV1(String key) {
         CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
         executorService.submit(
             () -> {
@@ -104,6 +103,31 @@ public class CQLDriver {
                     result.completeExceptionally(t);
                 }
             });
+        return result;
+    }
+
+    protected CompletableFuture<Collection<Row>> executeQueryOnExecutorV2(String key) {
+        CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
+        executorService.submit(
+                () -> {
+                    try {
+                        ResultSetFuture future = session.getDriverSession()
+                                .executeAsync(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
+                        Futures.addCallback(future, new FutureCallback<ResultSet>() {
+                            @Override
+                            public void onSuccess(ResultSet rs) {
+                                fetchRowsAsync(rs, new ArrayList<>(), result);
+                            }
+                            @Override
+                            public void onFailure(Throwable t) {
+                                result.completeExceptionally(t);
+                            }
+                        }, executorService); // MoreExecutors.directExecutor() or executor?
+
+                    } catch(Throwable t) {
+                        result.completeExceptionally(t);
+                    }
+                });
         return result;
     }
 
