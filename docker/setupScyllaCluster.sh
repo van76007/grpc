@@ -19,9 +19,12 @@ stop_and_remove_container() {
 }
 
 stop_and_remove_all_containers() {
-    for c in $(docker ps --all | awk '{print $1;}'); do
-        if [ "$c" != "CONTAINER" ]; then
-	    stop_and_remove_container $c
+    for c in $(docker ps --all | awk '{print $1"_"$2;}'); do
+        if [ "$c" != "CONTAINER_ID" ]; then
+          if [[ ${c:0:21} == *"scylla"* ]]; then
+            echo "To delete container ${c:0:12} after checking ${c:0:21}"
+	          stop_and_remove_container ${c:0:12}
+	        fi
         fi
     done
 }
@@ -41,7 +44,12 @@ append_scylla() {
                --seeds="$(docker inspect --format='{{ .NetworkSettings.IPAddress }}' scylla-node1)"
 }
 
-
+# Delete any previous docker setup
+if [ -d ${LOCATION} ]; then
+  stop_and_remove_all_containers
+  echo "Remove all scylla containers"
+  rm -rf ${LOCATION}
+fi
 
 # Prepare
 if [ ! -d ${LOCATION} ]; then
@@ -53,7 +61,7 @@ if [ ! -d ${LOCATION} ]; then
     echo "Finish dry run scylla"
     docker cp $(docker ps -lq):/etc/scylla/scylla.yaml ${LOCATION}/scylla.yaml
     echo "Finish copy scylla.yaml"
-    docker rm $(docker ps -lq)
+    # docker rm $(docker ps -lq)
     echo "Finish rm docker"
     cat >> ${LOCATION}/scylla.yaml <<EOF
 

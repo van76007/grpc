@@ -16,6 +16,10 @@ public class ClientRunner {
      * NUM_CONCURRENCY = 100 -> Did 5044.233333333334 RPCs/s but most of the time delay is 10 ms
      */
     private static final int NUM_CONCURRENCY = 100;
+
+    // Use e.g. "dns:///192.168.1.35:8090" if server running on another machine
+    private static final String GRPC_SERVER = "dns:///localhost:8090";
+
     private ManagedChannel channel;
 
     public static void main(String[] args) {
@@ -32,8 +36,7 @@ public class ClientRunner {
             throw new IllegalStateException("Already started");
         }
 
-        channel = ManagedChannelBuilder.forTarget("dns:///localhost:8090").usePlaintext().build();
-        // channel = NettyChannelBuilder.forAddress("localhost", 8090).usePlaintext(true).build();
+        channel = ManagedChannelBuilder.forTarget(GRPC_SERVER).usePlaintext().build();
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         try {
