@@ -39,7 +39,7 @@ public class CQLDriver {
                     new LinkedBlockingQueue<Runnable>());
     */
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(i_threads * 10);
+    private ExecutorService executorService = Executors.newFixedThreadPool(i_threads * 2); // 10
 
     // private ExecutorService executorService = Executors.newWorkStealingPool(i_threads);
 

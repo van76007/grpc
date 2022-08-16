@@ -7,7 +7,7 @@ BENCHMARKS_TO_RUN="${BENCHMARKS_TO_RUN:-$(find . -maxdepth 1 -name '*_bench' -ty
 
 RESULTS_DIR="results/$(date '+%y%d%mT%H%M%S')"
 export GRPC_BENCHMARK_DURATION=${GRPC_BENCHMARK_DURATION:-"100s"}
-export GRPC_BENCHMARK_WARMUP=${GRPC_BENCHMARK_WARMUP:-"10s"}
+export GRPC_BENCHMARK_WARMUP=${GRPC_BENCHMARK_WARMUP:-"60s"}
 export GRPC_SERVER_CPUS=${GRPC_SERVER_CPUS:-"2"}
 export GRPC_SERVER_RAM=${GRPC_SERVER_RAM:-"512m"}
 # number of connections cannot be greater than concurrency

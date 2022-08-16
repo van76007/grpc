@@ -1,9 +1,7 @@
 package www.grpc.cql;
 
-import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.*;
 import com.datastax.driver.core.ConsistencyLevel;
-import com.datastax.driver.core.ProtocolVersion;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.DCAwareRoundRobinPolicy;
 
 public class CQLSession implements AutoCloseable {
@@ -11,7 +9,7 @@ public class CQLSession implements AutoCloseable {
     private final Session driverSession;
     private final ConsistencyLevel consistencyLevel;
 
-    public CQLSession(CQLConfiguration cqlConfiguration) {
+    public CQLSession(CQLConfiguration cqlConfiguration, PoolingOptions poolingOptions) {
         Cluster.Builder clusterBuilder = Cluster.builder()
                 .withProtocolVersion(ProtocolVersion.NEWEST_SUPPORTED);
 
@@ -34,7 +32,7 @@ public class CQLSession implements AutoCloseable {
                     DCAwareRoundRobinPolicy.builder().withLocalDc(cqlConfiguration.getLocalDCName()).build());
         }
 
-        driverCluster = clusterBuilder.build();
+        driverCluster = clusterBuilder.withPoolingOptions(poolingOptions).build();
         driverSession = driverCluster.connect();
 
         switch (cqlConfiguration.getConsistencyLevel()) {
