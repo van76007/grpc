@@ -15,7 +15,7 @@ public class ClientRunner {
      * NUM_CONCURRENCY = 1 -> Did 441.73333333333335 RPCs/s but most of the time delay is 1/2 ms
      * NUM_CONCURRENCY = 100 -> Did 5044.233333333334 RPCs/s but most of the time delay is 10 ms
      */
-    private static final int NUM_CONCURRENCY = 100;
+    private static final int NUM_CONCURRENCY = 128;
 
     // Use e.g. "dns:///192.168.1.35:8090" if server running on another machine
     private static final String GRPC_SERVER = "dns:///192.168.1.35:8090";
