@@ -3,6 +3,8 @@ package www.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -31,10 +33,10 @@ class MyThread implements Runnable
     @Override
     public void run()
     {
-        final int NUM_CONCURRENCY = 128;
+        final int NUM_CONCURRENCY = 16;
 
         // Use e.g. "dns:///192.168.1.35:8090" if server running on another machine
-        final String GRPC_SERVER = "dns:///192.168.1.35:8090";
+        final String GRPC_SERVER = "dns:///192.168.1.34:8090";
 
         try
         {
@@ -47,18 +49,26 @@ class MyThread implements Runnable
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         long DURATION_SECONDS = 100;
+        KvClient client = null;
         try {
             AtomicBoolean done = new AtomicBoolean();
-            KvClient client = new KvClient(channel, NUM_CONCURRENCY);
+            client = new KvClient(channel, NUM_CONCURRENCY, String.valueOf(Thread.currentThread().getId()));
             System.out.println("Starting");
             scheduler.schedule(() -> done.set(true), DURATION_SECONDS, TimeUnit.SECONDS);
             client.doClientWork(done);
             long requestCount = client.getRpcCount();
             double qps = (double) requestCount / DURATION_SECONDS;
             System.out.println("Completed " + qps + " RPCs/s");
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | FileNotFoundException e) {
             e.printStackTrace();
         } finally {
+            if (client != null) {
+                try {
+                    client.finish();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
             scheduler.shutdownNow();
             channel.shutdownNow();
         }

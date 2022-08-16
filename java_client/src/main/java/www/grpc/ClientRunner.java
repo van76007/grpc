@@ -3,6 +3,8 @@ package www.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +20,7 @@ public class ClientRunner {
     private static final int NUM_CONCURRENCY = 128;
 
     // Use e.g. "dns:///192.168.1.35:8090" if server running on another machine
-    private static final String GRPC_SERVER = "dns:///192.168.1.35:8090";
+    private static final String GRPC_SERVER = "dns:///192.168.1.34:8090";
 
     private ManagedChannel channel;
 
@@ -26,12 +28,12 @@ public class ClientRunner {
         ClientRunner runner = new ClientRunner();
         try {
             runner.runClient();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void runClient() throws InterruptedException {
+    private void runClient() throws InterruptedException, IOException {
         if (channel != null) {
             throw new IllegalStateException("Already started");
         }
@@ -39,9 +41,10 @@ public class ClientRunner {
         channel = ManagedChannelBuilder.forTarget(GRPC_SERVER).usePlaintext().build();
 
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        KvClient client = null;
         try {
             AtomicBoolean done = new AtomicBoolean();
-            KvClient client = new KvClient(channel, NUM_CONCURRENCY);
+            client = new KvClient(channel, NUM_CONCURRENCY, "client");
             System.out.println("Starting");
             scheduler.schedule(() -> done.set(true), DURATION_SECONDS, TimeUnit.SECONDS);
             client.doClientWork(done);
@@ -49,7 +52,10 @@ public class ClientRunner {
             double qps = (double) requestCount / DURATION_SECONDS;
             System.out.println("Completed " + qps + " RPCs/s");
 
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         } finally {
+            client.finish();
             scheduler.shutdownNow();
             channel.shutdownNow();
         }
