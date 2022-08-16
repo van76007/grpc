@@ -18,7 +18,7 @@ public class ConcurrencyUtils {
                 return result;
             }
         };
-        // TODO: Custom executor?
+
         Futures.addCallback(listenableFuture, new FutureCallback<T>() {
             @Override
             public void onSuccess(T result) {

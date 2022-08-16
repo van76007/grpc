@@ -6,6 +6,7 @@ import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import www.grpc.concurrent.ConcurrencyUtils;
 import www.grpc.proto.Scyllaquery;
@@ -14,6 +15,7 @@ import www.grpc.proto.Scyllaquery.Response;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.*;
 
 import static java.util.stream.Collectors.toCollection;
@@ -29,16 +31,15 @@ public class CQLDriver {
 
     private final int i_threads = Runtime.getRuntime().availableProcessors();
 
+    /*
     private ExecutorService executorService = new ThreadPoolExecutor(
             i_threads,
             i_threads * 10,
             0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<Runnable>());
-
-    /*
-    private ThreadPoolExecutor executor =
-            (ThreadPoolExecutor) Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
     */
+
+    private ExecutorService executorService = Executors.newFixedThreadPool(i_threads * 10);
 
     // private ExecutorService executorService = Executors.newWorkStealingPool(i_threads);
 
@@ -70,8 +71,18 @@ public class CQLDriver {
         return ConcurrencyUtils.convertToCompletableFuture(session.getDriverSession().prepareAsync(query), executorService);
     }
 
-    // This is not good version if calling executeQueryOnExecutorV1
-    public CompletableFuture<Response> queryThenConvertV2(Request request) {
+    // This is the test version where we fake the result bypassing Scylla
+    /*
+    public CompletableFuture<Response> queryThenConvertV1(Request request) {
+        return CompletableFuture.completedFuture(Scyllaquery.Response.newBuilder()
+                .setStart(request.getStart())
+                .addAllValues(Arrays.asList("a", "b"))
+                .build());
+    }
+    */
+
+    // This is the EXPERIMENTAL version to execute a query on the Executor. Look good
+    public CompletableFuture<Response> queryThenConvert(Request request) {
         return executeQueryOnExecutorV2(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
                         .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
@@ -81,17 +92,8 @@ public class CQLDriver {
         );
     }
 
-    // This is test version where we by pass querying Scylla
+    // This is the CURRENT version
     /*
-    public CompletableFuture<Response> queryThenConvert(Request request) {
-        return CompletableFuture.completedFuture(Scyllaquery.Response.newBuilder()
-                .setStart(request.getStart())
-                .addAllValues(Arrays.asList("a", "b"))
-                .build());
-    }
-    */
-
-    // This is OFFICIAL version
     public CompletableFuture<Response> queryThenConvert(Request request) {
         return executeQuery(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
@@ -100,9 +102,10 @@ public class CQLDriver {
                         .build()
         );
     }
+     */
 
     /**
-     * This is not a good version as it is blocked on CQL session.execute
+     * This is not a good version as it is uses blocking execution of CQL session
      * @param key
      * @return
      */
@@ -124,25 +127,25 @@ public class CQLDriver {
     protected CompletableFuture<Collection<Row>> executeQueryOnExecutorV2(String key) {
         CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
         executorService.submit(
-                () -> {
-                    try {
-                        ResultSetFuture future = session.getDriverSession()
-                                .executeAsync(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
-                        Futures.addCallback(future, new FutureCallback<ResultSet>() {
-                            @Override
-                            public void onSuccess(ResultSet rs) {
-                                fetchRowsAsync(rs, new ArrayList<>(), result);
-                            }
-                            @Override
-                            public void onFailure(Throwable t) {
-                                result.completeExceptionally(t);
-                            }
-                        }, executorService); // MoreExecutors.directExecutor() or executor?
+            () -> {
+                try {
+                    ResultSetFuture future = session.getDriverSession()
+                            .executeAsync(this.statement.bind(key).setConsistencyLevel(session.getConsistencyLevel()));
+                    Futures.addCallback(future, new FutureCallback<ResultSet>() {
+                        @Override
+                        public void onSuccess(ResultSet rs) {
+                            fetchRowsAsync(rs, new ArrayList<>(), result);
+                        }
+                        @Override
+                        public void onFailure(Throwable t) {
+                            result.completeExceptionally(t);
+                        }
+                    }, executorService); // MoreExecutors.directExecutor() or executor?
 
-                    } catch(Throwable t) {
-                        result.completeExceptionally(t);
-                    }
-                });
+                } catch(Throwable t) {
+                    result.completeExceptionally(t);
+                }
+            });
         return result;
     }
 
