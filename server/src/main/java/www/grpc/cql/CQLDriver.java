@@ -12,6 +12,7 @@ import www.grpc.proto.Scyllaquery;
 import www.grpc.proto.Scyllaquery.Request;
 import www.grpc.proto.Scyllaquery.Response;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.*;
 
@@ -80,13 +81,23 @@ public class CQLDriver {
         );
     }
 
+    // This is test version where we by pass querying Scylla
+    /*
+    public CompletableFuture<Response> queryThenConvert(Request request) {
+        return CompletableFuture.completedFuture(Scyllaquery.Response.newBuilder()
+                .setStart(request.getStart())
+                .addAllValues(Arrays.asList("a", "b"))
+                .build());
+    }
+    */
+
+    // This is OFFICIAL version
     public CompletableFuture<Response> queryThenConvert(Request request) {
         return executeQuery(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
                         .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
                         .setStart(request.getStart())
                         .build()
-
         );
     }
 
