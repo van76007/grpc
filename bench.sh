@@ -6,12 +6,13 @@ BENCHMARKS_TO_RUN="${@}"
 BENCHMARKS_TO_RUN="${BENCHMARKS_TO_RUN:-$(find . -maxdepth 1 -name '*_bench' -type d | sort)}"
 
 RESULTS_DIR="results/$(date '+%y%d%mT%H%M%S')"
-export GRPC_BENCHMARK_DURATION=${GRPC_BENCHMARK_DURATION:-"30s"}
+export GRPC_BENCHMARK_DURATION=${GRPC_BENCHMARK_DURATION:-"100s"}
 export GRPC_BENCHMARK_WARMUP=${GRPC_BENCHMARK_WARMUP:-"10s"}
 export GRPC_SERVER_CPUS=${GRPC_SERVER_CPUS:-"2"}
 export GRPC_SERVER_RAM=${GRPC_SERVER_RAM:-"512m"}
-export GRPC_CLIENT_CONNECTIONS=${GRPC_CLIENT_CONNECTIONS:-"50"}
-export GRPC_CLIENT_CONCURRENCY=${GRPC_CLIENT_CONCURRENCY:-"128"}
+# number of connections cannot be greater than concurrency
+export GRPC_CLIENT_CONNECTIONS=${GRPC_CLIENT_CONNECTIONS:-"2"}
+export GRPC_CLIENT_CONCURRENCY=${GRPC_CLIENT_CONCURRENCY:-"2"}
 export GRPC_CLIENT_QPS=${GRPC_CLIENT_QPS:-"0"}
 export GRPC_CLIENT_QPS=$(( GRPC_CLIENT_QPS / GRPC_CLIENT_CONCURRENCY ))
 export GRPC_CLIENT_CPUS=${GRPC_CLIENT_CPUS:-"4"}
@@ -61,17 +62,17 @@ if [[ "${GRPC_BENCHMARK_WARMUP}" != "0s" ]]; then
   docker run --name ghz --rm --network=host -v "${PWD}/grpc-proto:/grpc-proto:ro" \
     -v "${PWD}/payload:/payload:ro" \
     --cpus $GRPC_CLIENT_CPUS \
-    obvionaoe/ghz:v0.103.0 \
+    obvionaoe/ghz:latest \
     --proto=/grpc-proto/scyllaquery/scyllaquery.proto \
     --call=scyllaquery.QueryScylla.ExecuteQuery \
-    --insecure \
-    --count-errors \
-    #--enable-compression \
-    --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
-    --connections="${GRPC_CLIENT_CONNECTIONS}" \
-    --rps="${GRPC_CLIENT_QPS}" \
-    --duration "${GRPC_BENCHMARK_WARMUP}" \
-    --data-file /payload/payload \
+      --insecure \
+      --count-errors \
+      #--enable-compression \
+      --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
+      --connections="${GRPC_CLIENT_CONNECTIONS}" \
+      --rps="${GRPC_CLIENT_QPS}" \
+      --duration "${GRPC_BENCHMARK_WARMUP}" \
+      --data-file /payload/payload \
     "${GRPC_SERVER}:${GRPC_PORT}" > /dev/null
 
   echo "done."
@@ -89,15 +90,15 @@ echo "Benchmarking now... "
 docker run --name ghz --rm --network=host -v "${PWD}/grpc-proto:/grpc-proto:ro" \
   -v "${PWD}/payload:/payload:ro" \
   --cpus $GRPC_CLIENT_CPUS \
-  obvionaoe/ghz:v0.103.0 \
+  obvionaoe/ghz:latest \
   --proto=/grpc-proto/scyllaquery/scyllaquery.proto \
   --call=scyllaquery.QueryScylla.ExecuteQuery \
-  --insecure \
-  --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
-  --connections="${GRPC_CLIENT_CONNECTIONS}" \
-  --rps="${GRPC_CLIENT_QPS}" \
-  --duration "${GRPC_BENCHMARK_DURATION}" \
-  --data-file /payload/payload \
+    --insecure \
+    --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
+    --connections="${GRPC_CLIENT_CONNECTIONS}" \
+    --rps="${GRPC_CLIENT_QPS}" \
+    --duration "${GRPC_BENCHMARK_DURATION}" \
+    --data-file /payload/payload \
   "${GRPC_SERVER}:${GRPC_PORT}" >"${RESULTS_DIR}/${NAME}".report
 
 # Show quick summary (reqs/sec)
