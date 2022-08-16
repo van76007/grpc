@@ -1,4 +1,6 @@
 package www.grpc.server;
+import com.datastax.driver.core.HostDistance;
+import com.datastax.driver.core.PoolingOptions;
 import io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.services.ProtoReflectionService;
 import www.grpc.cql.CQLConfiguration;
@@ -66,9 +68,16 @@ public class Server {
                         new InetSocketAddress("localhost", 9044))
                 )
                 .withCredentials("cassandra", "cassandra")
-                .withConsistencyLevel(ConsistencyLevel.LOCAL_ONE)
+                .withConsistencyLevel(ConsistencyLevel.ONE)
                 .build();
-        CQLSession session = new CQLSession(config);
+        // Optimize Scylla performance
+        PoolingOptions poolingOptions = new PoolingOptions()
+                .setMaxQueueSize(2048) // To fix error: Pool is busy (no available connection and queue reach its max size 256)
+                .setCoreConnectionsPerHost(HostDistance.LOCAL,10)
+                .setMaxConnectionsPerHost(HostDistance.LOCAL,10)
+                .setMaxRequestsPerConnection(HostDistance.LOCAL, 10)
+                .setPoolTimeoutMillis(100); // To fix error: Pool is busy (no available connection and time out after 100 ms)
+        CQLSession session = new CQLSession(config, poolingOptions);
         return new CQLDriver(session);
     }
 
@@ -86,7 +95,7 @@ public class Server {
         }
 
         // In principle, the number of threads should be equal to the number of CPUs
-        i_threads = i_threads * 20;
+        i_threads = i_threads * 4; // 20
 
         String value = System.getenv().getOrDefault("JVM_EXECUTOR_TYPE", "workStealing");
         System.out.println("Number of threads " + i_threads + " and executor style=" + value);
