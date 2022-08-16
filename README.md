@@ -34,5 +34,13 @@ grpcurl --plaintext -d '{"key":"0", "start":1000000}' localhost:8090 scyllaquery
 ```
 jenv shell 1.8
 cd java_client
+
 ./gradlew clientRunner
+
+./gradlew multiClientRunner
+```
+
+7. Stress test
+```
+./bench.sh
 ```
