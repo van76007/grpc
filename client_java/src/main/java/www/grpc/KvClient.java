@@ -28,8 +28,15 @@ public class KvClient {
     public KvClient(ManagedChannel channel, int numberOfConcurrentGrpc, String name) throws FileNotFoundException {
         this.channel = channel;
         this.limiter = new Semaphore(numberOfConcurrentGrpc);
-        this.stub = QueryScyllaGrpc.newFutureStub(channel);
+        this.stub = QueryScyllaGrpc.newFutureStub(this.channel);
         this.fos = new FileOutputStream(name + ".csv", true);
+        /*
+        try {
+            fos.write("Delay in Milliseconds,Scylla Execution Time, Submit to Scylla Execution Time\r\n".getBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+         */
     }
 
     public long getRpcCount() {
@@ -37,7 +44,6 @@ public class KvClient {
     }
 
     public void doClientWork(AtomicBoolean done) throws InterruptedException {
-        // QueryScyllaGrpc.QueryScyllaFutureStub stub = QueryScyllaGrpc.newFutureStub(channel);
         while(!done.get()) {
             // Call server
             limiter.acquire();
@@ -56,9 +62,10 @@ public class KvClient {
                 @Override
                 public void onSuccess(Scyllaquery.Response response) {
                     long delay = (System.nanoTime() - response.getStart()) / 1000000;
-                    System.out.println("Got response " + response.getValuesList().toString() + " delay " + delay + " ms");
+                    System.out.println("Got response " + response.getValuesList() + " metrics " + response.getMetricsList() + " delay " + delay + " ms");
+                    String metrics = response.getMetricsList().toString();
                     try {
-                        fos.write((delay + "\r\n").getBytes());
+                        fos.write((delay + "," + metrics.substring(1, metrics.length() - 1) + "\r\n").getBytes());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -75,6 +82,7 @@ public class KvClient {
     }
 
     public void finish() throws IOException {
+        //this.channel.shutdownNow();
         this.fos.close();
     }
 }

@@ -17,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.function.Function;
 
 import static java.util.stream.Collectors.toCollection;
 
@@ -83,6 +84,7 @@ public class CQLDriver {
 
     // This is the EXPERIMENTAL version to execute a query on the Executor. Look good
     public CompletableFuture<Response> queryThenConvert(Request request) {
+        /*
         return executeQueryOnExecutorV2(request.getKey()).thenApply(o ->
                 Scyllaquery.Response.newBuilder()
                         .addAllValues(o.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
@@ -90,6 +92,18 @@ public class CQLDriver {
                         .build()
 
         );
+        */
+        long start = System.nanoTime();
+        return executeQueryOnExecutorV2(request.getKey()).thenCompose(collectionOfRows -> {
+            long delay = (System.nanoTime() - start) / 1000000;
+            return CompletableFuture.completedFuture(
+                    Scyllaquery.Response.newBuilder()
+                            .addAllValues(collectionOfRows.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
+                            .setStart(request.getStart())
+                            .addMetrics(String.valueOf(delay))
+                            .build()
+            );
+        });
     }
 
     // This is the CURRENT version

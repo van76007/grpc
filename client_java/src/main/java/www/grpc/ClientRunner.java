@@ -20,7 +20,8 @@ public class ClientRunner {
     private static final int NUM_CONCURRENCY = 128;
 
     // Use e.g. "dns:///192.168.1.35:8090" if server running on another machine
-    private static final String GRPC_SERVER = "dns:///192.168.1.34:8090";
+    // Use e.g. "dns:///localhost:8090" if server running on the same another machine
+    private static final String GRPC_SERVER = "dns:///localhost:8090";
 
     private ManagedChannel channel;
 
