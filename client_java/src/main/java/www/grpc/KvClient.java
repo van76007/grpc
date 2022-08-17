@@ -4,13 +4,10 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import io.grpc.Channel;
-import io.grpc.Status;
-import io.grpc.Status.Code;
-import io.grpc.StatusRuntimeException;
-import www.grpc.proto.Scyllaquery;
-import www.grpc.proto.QueryScyllaGrpc;
 import io.grpc.ManagedChannel;
+import io.grpc.Status;
+import www.grpc.proto.QueryScyllaGrpc;
+import www.grpc.proto.Scyllaquery;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -19,7 +16,6 @@ import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.time.LocalTime;
 
 public class KvClient {
     private final ManagedChannel channel;

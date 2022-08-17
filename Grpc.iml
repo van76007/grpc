@@ -7,7 +7,5 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: io.grpc:grpc-api:1.48.1" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava:31.1-android" level="project" />
   </component>
 </module>

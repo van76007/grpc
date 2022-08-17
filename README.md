@@ -11,16 +11,14 @@ cd docker
 jenv shell 1.8
 ```
 
-3. Compile Server by Maven. Can use Java 11
+3. Compile Client by Maven then refresh to prevent IDE error.
 ```
-jenv shell 11
 cd server
 mvn clean install
 ```
 
 4. Compile and start Server by Gradle. Only work with Java 1.8 for now
 ```
-jenv shell 1.8
 cd server
 ./gradlew runServer
 ```
@@ -33,7 +31,7 @@ grpcurl --plaintext -d '{"key":"0", "start":1000000}' localhost:8090 scyllaquery
 6. Compile and start Client by Gradle. Only work with Java 1.8 for now
 ```
 jenv shell 1.8
-cd java_client
+cd client_java
 
 ./gradlew clientRunner
 

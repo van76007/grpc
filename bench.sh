@@ -58,11 +58,11 @@ echo 'ready.'
 
 # Warm up the service
 echo "gRPC Server Warmup..."
-docker run --name ghz --rm --network=host -v "${PWD}/grpc-proto:/grpc-proto:ro" \
+docker run --name ghz --rm --network=host -v "${PWD}/proto:/proto:ro" \
     	    -v "${PWD}/payload:/payload:ro" \
     		--cpus $GRPC_CLIENT_CPUS \
     	  obvionaoe/ghz:latest \
-    		--proto=/grpc-proto/scyllaquery/scyllaquery.proto \
+    		--proto=/proto/scyllaquery.proto \
     		--call=scyllaquery.QueryScylla.ExecuteQuery \
             --insecure \
             --count-errors \
@@ -84,7 +84,7 @@ docker run --name ghz --rm --network=host -v "${PWD}/grpc-proto:/grpc-proto:ro" 
   -v "${PWD}/payload:/payload:ro" \
   --cpus $GRPC_CLIENT_CPUS \
   obvionaoe/ghz:latest \
-    --proto=/grpc-proto/scyllaquery/scyllaquery.proto \
+    --proto=/proto/scyllaquery.proto \
     --call=scyllaquery.QueryScylla.ExecuteQuery \
             --async \
             --insecure \
