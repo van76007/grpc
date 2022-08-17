@@ -29,7 +29,7 @@ public class KvClient {
         this.channel = channel;
         this.limiter = new Semaphore(numberOfConcurrentGrpc);
         this.stub = QueryScyllaGrpc.newFutureStub(this.channel);
-        this.fos = new FileOutputStream(name + ".csv", true);
+        this.fos = new FileOutputStream(name + ".csv", false);
         /*
         try {
             fos.write("Delay in Milliseconds,Scylla Execution Time, Submit to Scylla Execution Time\r\n".getBytes());
