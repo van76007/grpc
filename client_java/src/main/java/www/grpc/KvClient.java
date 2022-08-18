@@ -12,6 +12,7 @@ import www.grpc.proto.Scyllaquery;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.rmi.server.UID;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -50,7 +51,11 @@ public class KvClient {
             Random rand = new Random();
             int r = rand.nextInt(3);
             long start = System.nanoTime();
-            Scyllaquery.Request request = Scyllaquery.Request.newBuilder().setKey(String.valueOf(r)).setStart(start).build();
+            Scyllaquery.Request request = Scyllaquery.Request.newBuilder()
+                    .setKey(String.valueOf(r))
+                    .setStart(start)
+                    .setUuid(java.util.UUID.randomUUID().toString())
+                    .build();
             ListenableFuture<Scyllaquery.Response> res = stub.executeQuery(request);
 
             res.addListener(() ->  {
