@@ -29,17 +29,17 @@ stop_and_remove_all_containers() {
 }
 
 run_scylla() {
-    docker run --name "scylla-node$1" --publish $2:${PORT} \
+    docker run --security-opt seccomp=unconfined --name "scylla-node$1" --publish $2:${PORT} \
                --volume ${LOCATION}/mapped/node$1:/var/lib/scylla \
                --volume ${LOCATION}/scylla.yaml:/etc/scylla/scylla.yaml \
-               --detach ${IMAGE}
+               --detach ${IMAGE} --smp 4 --memory 8G
 }
 
 append_scylla() {
-    docker run --name "scylla-node$1" --publish $2:${PORT} \
+    docker run --security-opt seccomp=unconfined --name "scylla-node$1" --publish $2:${PORT} \
                --volume ${LOCATION}/mapped/node$1:/var/lib/scylla \
                --volume ${LOCATION}/scylla.yaml:/etc/scylla/scylla.yaml \
-               --detach ${IMAGE} \
+               --detach ${IMAGE} --smp 4 --memory 8G \
                --seeds="$(docker inspect --format='{{ .NetworkSettings.IPAddress }}' scylla-node1)"
 }
 

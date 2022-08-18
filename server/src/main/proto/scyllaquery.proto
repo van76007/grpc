@@ -7,6 +7,7 @@ package scyllaquery;
 message Request {
   string key = 1;
   int64 start = 2;
+  string uuid = 3;
 }
 
 message Response {

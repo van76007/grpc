@@ -98,19 +98,20 @@ public class CQLDriver {
 
         // With metrics
         long start = System.nanoTime();
-        return executeQueryOnExecutorV2(request.getKey()).thenCompose(collectionOfRows -> {
+        return executeQueryOnExecutorV2(request.getKey(), request.getUuid()).thenCompose(collectionOfRows -> {
             long delay = (System.nanoTime() - start) / 1000000;
             return CompletableFuture.completedFuture(
                     Scyllaquery.Response.newBuilder()
                             .addAllValues(collectionOfRows.stream().map(r -> r.getString(0)).collect(toCollection(ArrayList::new)))
                             .setStart(request.getStart())
+                            .addMetrics(request.getUuid())
                             .addMetrics(String.valueOf(delay))
                             .build()
             );
         });
     }
 
-    protected CompletableFuture<Collection<Row>> executeQueryOnExecutorV2(String key) {
+    protected CompletableFuture<Collection<Row>> executeQueryOnExecutorV2(String key, String uuid) {
         CompletableFuture<Collection<Row>> result = new CompletableFuture<>();
         executorService1.submit(
             () -> {
@@ -122,9 +123,9 @@ public class CQLDriver {
                         @Override
                         public void onSuccess(ResultSet rs) {
                             long delay = (System.nanoTime() - start) / 1000000;
-                            System.out.println("Success query Scylla: " + key + " delay " + delay);
+                            System.out.println("Success query Scylla: " + uuid + " delay " + delay);
                             try {
-                                fos.write((key + "," + delay + "\r\n").getBytes());
+                                fos.write((uuid + "," + delay + "\r\n").getBytes());
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -134,7 +135,7 @@ public class CQLDriver {
                         public void onFailure(Throwable t) {
                             t.printStackTrace();
                             long delay = (System.nanoTime() - start) / 1000000;
-                            System.out.println("Failed query Scylla: " + key + " delay " + delay);
+                            System.out.println("Failed query Scylla: " + uuid + " delay " + delay);
                             try {
                                 fos.write((key + "," + delay + "\r\n").getBytes());
                             } catch (IOException e) {
