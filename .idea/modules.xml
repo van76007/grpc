@@ -3,6 +3,10 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Grpc.iml" filepath="$PROJECT_DIR$/Grpc.iml" />
+      <module fileurl="file://$PROJECT_DIR$/client_java.iml" filepath="$PROJECT_DIR$/client_java.iml" />
+      <module fileurl="file://$PROJECT_DIR$/server.iml" filepath="$PROJECT_DIR$/server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/server_scala.iml" filepath="$PROJECT_DIR$/.idea/modules/server_scala.iml" />
+      <module fileurl="file://$PROJECT_DIR$/server_scala/.idea/modules/server_scala-build.iml" filepath="$PROJECT_DIR$/server_scala/.idea/modules/server_scala-build.iml" />
     </modules>
   </component>
 </project>

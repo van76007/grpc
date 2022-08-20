@@ -13,5 +13,9 @@
         <module name="client_java" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="client_java" target="1.8" />
+      <module name="server" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

@@ -42,3 +42,12 @@ cd client_java
 ```
 ./bench.sh
 ```
+
+OTHER TECH
+
+1. Scala: Akka Grpc
+```aidl
+cd server_scala
+sbt clean compile
+sbt "runMain grpc.scala.server.GreeterServer"
+```
