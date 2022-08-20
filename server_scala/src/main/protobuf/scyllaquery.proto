@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_package = "www.grpc.proto";
+
+package scyllaquery;
+
+message Request {
+  string key = 1;
+  int64 start = 2;
+  string uuid = 3;
+}
+
+message Response {
+  repeated string values = 1;
+  int64 start = 2;
+  repeated string metrics = 3;
+}
+
+service QueryScylla {
+  rpc ExecuteQuery(Request) returns (Response) {}
+}
