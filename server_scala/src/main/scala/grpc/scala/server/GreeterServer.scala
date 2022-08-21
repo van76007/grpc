@@ -30,7 +30,9 @@ object GreeterServer {
 class GreeterServer(system: akka.actor.typed.ActorSystem[_]) {
   implicit val sys = system
   implicit val ec: ExecutionContext = system.executionContext
-  val SERVER_IP = "127.0.0.1"
+  // If test client from the same machine as server, use "127.0.0.1"
+  // If test client from the different machine, use IP e.g. ifconfig | grep eth0 "192.168.1.34"
+  val SERVER_IP = "192.168.1.34"
 
   def buildDriver(system: akka.actor.ActorSystem) = {
     val config = CQLConfiguration(
