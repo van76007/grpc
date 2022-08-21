@@ -25,7 +25,7 @@ cd server
 
 5. Test Server by command-line. Note that we have to enable service ProtoReflectionService
 ```
-grpcurl --plaintext -d '{"key":"0", "start":1000000}' localhost:8090 scyllaquery.QueryScylla/ExecuteQuery
+grpcurl --plaintext -d '{"key":"0", "uuid":"7be0d80a-61db-4a8a-bd4a-3f4456635f2f", "start":1000000}' 127.0.0.1:8090 scyllaquery.QueryScylla/ExecuteQuery
 ```
 
 6. Compile and start Client by Gradle. Only work with Java 1.8 for now

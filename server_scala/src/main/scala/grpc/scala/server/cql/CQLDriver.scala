@@ -66,6 +66,7 @@ class CQLDriver(val cqlSession: CQLSession, system: ActorSystem) {
 
   def convertToResponse(rows: Seq[Row], request: Request, start: Long): Response = {
     val delay = (System.nanoTime() - start) / 1000000
+    println(s"Delay query SQL is $delay ms")
     new Response()
       .withStart(request.start)
       .addAllValues(rows.map(r => r.getString(0)))

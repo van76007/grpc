@@ -30,6 +30,7 @@ object GreeterServer {
 class GreeterServer(system: akka.actor.typed.ActorSystem[_]) {
   implicit val sys = system
   implicit val ec: ExecutionContext = system.executionContext
+  val SERVER_IP = "127.0.0.1"
 
   def buildDriver(system: akka.actor.ActorSystem) = {
     val config = CQLConfiguration(
@@ -59,7 +60,7 @@ class GreeterServer(system: akka.actor.typed.ActorSystem[_]) {
       QueryScyllaHandler.withServerReflection(new QueryScyllaServiceImpl(driver, system))
 
     val bound: Future[Http.ServerBinding] = Http(system)
-      .newServerAt(interface = "127.0.0.1", port = 8090)
+      .newServerAt(interface = SERVER_IP, port = 8090)
       // .enableHttps(serverHttpContext)
       .bind(service)
       .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))

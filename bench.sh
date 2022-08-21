@@ -7,18 +7,19 @@ BENCHMARKS_TO_RUN="${BENCHMARKS_TO_RUN:-$(find . -maxdepth 1 -name '*_bench' -ty
 
 RESULTS_DIR="results/$(date '+%y%d%mT%H%M%S')"
 export GRPC_BENCHMARK_DURATION=${GRPC_BENCHMARK_DURATION:-"100s"}
-export GRPC_BENCHMARK_WARMUP=${GRPC_BENCHMARK_WARMUP:-"60s"}
+export GRPC_BENCHMARK_WARMUP=${GRPC_BENCHMARK_WARMUP:-"30s"}
 export GRPC_SERVER_CPUS=${GRPC_SERVER_CPUS:-"2"}
 export GRPC_SERVER_RAM=${GRPC_SERVER_RAM:-"512m"}
 # number of connections cannot be greater than concurrency
-export GRPC_CLIENT_CONNECTIONS=${GRPC_CLIENT_CONNECTIONS:-"16"}
-export GRPC_CLIENT_CONCURRENCY=${GRPC_CLIENT_CONCURRENCY:-"16"}
-export GRPC_CLIENT_QPS=${GRPC_CLIENT_QPS:-"0"}
+export GRPC_CLIENT_CONNECTIONS=${GRPC_CLIENT_CONNECTIONS:-"1"}
+export GRPC_CLIENT_CONCURRENCY=${GRPC_CLIENT_CONCURRENCY:-"1"}
+export GRPC_CLIENT_QPS=${GRPC_CLIENT_QPS:-"1"}
 export GRPC_CLIENT_QPS=$(( GRPC_CLIENT_QPS / GRPC_CLIENT_CONCURRENCY ))
 export GRPC_CLIENT_CPUS=${GRPC_CLIENT_CPUS:-"4"}
 export GRPC_REQUEST_SCENARIO=${GRPC_REQUEST_SCENARIO:-"complex_proto"}
 export GRPC_IMAGE_NAME="${GRPC_IMAGE_NAME:-grpc_bench}"
 export GRPC_PORT="8090"
+# Use output of ifconfig | grep en0 Do not use localhost or 127.0.0.1
 export GRPC_SERVER="192.168.1.34"
 export NAME="test_grpc"
 
@@ -58,14 +59,16 @@ echo 'ready.'
 
 # Warm up the service
 echo "gRPC Server Warmup..."
+
 docker run --name ghz --rm --network=host -v "${PWD}/proto:/proto:ro" \
     	    -v "${PWD}/payload:/payload:ro" \
     		--cpus $GRPC_CLIENT_CPUS \
-    	  obvionaoe/ghz:latest \
+    	  obvionaoe/ghz:v0.103.0 \
     		--proto=/proto/scyllaquery.proto \
     		--call=scyllaquery.QueryScylla.ExecuteQuery \
             --insecure \
             --count-errors \
+            --enable-compression \
             --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
             --connections="${GRPC_CLIENT_CONNECTIONS}" \
             --rps="${GRPC_CLIENT_QPS}" \
@@ -80,22 +83,21 @@ echo "Benchmarking now... "
 ./collect_stats.sh "${NAME}" "${RESULTS_DIR}" &
 
 # Start the gRPC Client
-docker run --name ghz --rm --network=host -v "${PWD}/grpc-proto:/grpc-proto:ro" \
-  -v "${PWD}/payload:/payload:ro" \
-  --cpus $GRPC_CLIENT_CPUS \
-  obvionaoe/ghz:latest \
-    --proto=/proto/scyllaquery.proto \
-    --call=scyllaquery.QueryScylla.ExecuteQuery \
-            --async \
-            --insecure \
-            --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
-            --connections="${GRPC_CLIENT_CONNECTIONS}" \
-            --rps="${GRPC_CLIENT_QPS}" \
-            --duration "${GRPC_BENCHMARK_DURATION}" \
-            --data-file /payload/payload \
-    		"${GRPC_SERVER}:${GRPC_PORT}" >"${RESULTS_DIR}/${NAME}".report
+docker run --name ghz --rm --network=host -v "${PWD}/proto:/proto:ro" \
+	    -v "${PWD}/payload:/payload:ro" \
+		--cpus $GRPC_CLIENT_CPUS \
+    obvionaoe/ghz:v0.103.0 \
+		--proto=/proto/scyllaquery.proto \
+		--call=scyllaquery.QueryScylla.ExecuteQuery \
+        --insecure \
+        --concurrency="${GRPC_CLIENT_CONCURRENCY}" \
+        --connections="${GRPC_CLIENT_CONNECTIONS}" \
+        --rps="${GRPC_CLIENT_QPS}" \
+        --duration "${GRPC_BENCHMARK_DURATION}" \
+        --data-file /payload/payload \
+		"${GRPC_SERVER}:${GRPC_PORT}" >"${RESULTS_DIR}/${NAME}".report
 
-# Show quick summary (reqs/sec)
+# Show quick summary
 cat << EOF
   done.
   Results:
