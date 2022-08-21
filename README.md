@@ -50,4 +50,8 @@ OTHER TECH
 cd server_scala
 sbt clean compile
 sbt "runMain grpc.scala.server.GreeterServer"
+
+cd server_client
+sbt clean compile
+sbt "runMain grpc.scala.client.GreeterClient"
 ```
