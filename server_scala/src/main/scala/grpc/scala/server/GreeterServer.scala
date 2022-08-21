@@ -37,19 +37,20 @@ class GreeterServer(system: akka.actor.typed.ActorSystem[_]) {
   def buildDriver(system: akka.actor.ActorSystem) = {
     val config = CQLConfiguration(
       contactPoints = List(
-        new InetSocketAddress("0.0.0.0", 9042),
-        new InetSocketAddress("0.0.0.0", 9043),
-        new InetSocketAddress("0.0.0.0", 9044)),
+        new InetSocketAddress("127.0.0.1", 9042),
+        new InetSocketAddress("127.0.0.1", 9043),
+        new InetSocketAddress("127.0.0.1", 9044)),
       user = "cassandra",
       password = "cassandra",
       consistencyLevel = ConsistentLevel.ONE)
     // Optimize Scylla performance
     val poolingOptions = new PoolingOptions()
       .setMaxQueueSize(2048) // To fix error: Pool is busy (no available connection and queue reach its max size 256)
-      .setCoreConnectionsPerHost(HostDistance.LOCAL, 10)
-      .setMaxConnectionsPerHost(HostDistance.LOCAL, 10)
-      .setMaxRequestsPerConnection(HostDistance.LOCAL, 10)
-      .setPoolTimeoutMillis(100)
+      .setCoreConnectionsPerHost(HostDistance.LOCAL, 4)
+      .setMaxConnectionsPerHost(HostDistance.LOCAL, 4)
+      .setNewConnectionThreshold(HostDistance.LOCAL,1024)
+      .setPoolTimeoutMillis(5000)
+    // val poolingOptions = new PoolingOptions()
 
     val session = new CQLSession(config, poolingOptions)
     new CQLDriver(session, system)

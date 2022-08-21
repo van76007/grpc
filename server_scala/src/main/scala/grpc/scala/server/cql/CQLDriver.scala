@@ -11,6 +11,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.{Future, Promise}
 
 class CQLDriver(val cqlSession: CQLSession, system: ActorSystem) {
+  // Use "fixed-dispatcher" will burn the CPU
   implicit val executionContext = system.dispatchers.lookup("fork-join-dispatcher")
 
   lazy val selectQuery = "select value from demo.history where key = ?"
