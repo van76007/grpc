@@ -1,0 +1,5 @@
+/.idea/
+/client_java/build/
+/client_java/src/generated/
+/server/.gradle/
+/server/target/
